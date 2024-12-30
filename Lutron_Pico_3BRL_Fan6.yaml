@@ -92,7 +92,8 @@ action:
                 - service: fan.set_percentage
                   data:
                     entity_id: !input fan_entity
-                    percentage: "{{ [state_attr(fan_entity, 'percentage') + speed_step, 100] | min }}"
+                    percentage: >
+                      {{ [state_attr("!input fan_entity", 'percentage') + !input speed_step, 100] | min }}
                 - delay:
                     milliseconds: 500
               until:
@@ -107,7 +108,8 @@ action:
                 - service: fan.set_percentage
                   data:
                     entity_id: !input fan_entity
-                    percentage: "{{ [state_attr(fan_entity, 'percentage') - speed_step, 0] | max }}"
+                    percentage: >
+                      {{ [state_attr("!input fan_entity", 'percentage') - !input speed_step, 0] | max }}
                 - delay:
                     milliseconds: 500
               until:
