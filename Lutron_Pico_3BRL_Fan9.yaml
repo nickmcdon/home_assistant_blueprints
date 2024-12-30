@@ -75,7 +75,14 @@ trigger:
     id: off_pressed
 
 action:
+  # 1) Define variables for fan entity and speed step
+  - variables:
+      fan_var: !input fan_entity
+      speed_var: !input speed_step
+
+  # 2) Branch behavior based on which Pico button triggered this automation
   - choose:
+      # ============== ON Pressed ==============
       - conditions:
           - condition: trigger
             id: on_pressed
@@ -84,6 +91,7 @@ action:
             target:
               entity_id: !input fan_entity
 
+      # ============== UP Pressed (Raise) ==============
       - conditions:
           - condition: trigger
             id: up_pressed
@@ -93,13 +101,14 @@ action:
                 - service: fan.set_percentage
                   data:
                     entity_id: !input fan_entity
-                    percentage: "{{ [ state_attr(!input fan_entity, 'percentage')|int + !input speed_step|int, 100 ] | min }}"
+                    percentage: "{{ [ state_attr(fan_var, 'percentage')|int + speed_var|int, 100 ] | min }}"
                 - delay:
                     milliseconds: 500
               until:
                 - condition: trigger
                   id: up_released
 
+      # ============== DOWN Pressed (Lower) ==============
       - conditions:
           - condition: trigger
             id: down_pressed
@@ -109,13 +118,14 @@ action:
                 - service: fan.set_percentage
                   data:
                     entity_id: !input fan_entity
-                    percentage: "{{ [ state_attr(!input fan_entity, 'percentage')|int - !input speed_step|int, 0 ] | max }}"
+                    percentage: "{{ [ state_attr(fan_var, 'percentage')|int - speed_var|int, 0 ] | max }}"
                 - delay:
                     milliseconds: 500
               until:
                 - condition: trigger
                   id: down_released
 
+      # ============== OFF Pressed ==============
       - conditions:
           - condition: trigger
             id: off_pressed
