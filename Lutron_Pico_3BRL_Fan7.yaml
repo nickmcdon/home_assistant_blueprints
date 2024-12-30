@@ -93,7 +93,7 @@ action:
                   data:
                     entity_id: !input fan_entity
                     percentage: >
-                      {{ [state_attr("!input fan_entity", 'percentage') + !input speed_step, 100] | min }}
+                      {{ [state_attr(!input fan_entity, 'percentage')|int + !input speed_step|int, 100]|min }}
                 - delay:
                     milliseconds: 500
               until:
@@ -109,7 +109,7 @@ action:
                   data:
                     entity_id: !input fan_entity
                     percentage: >
-                      {{ [state_attr("!input fan_entity", 'percentage') - !input speed_step, 0] | max }}
+                      {{ [state_attr(!input fan_entity, 'percentage')|int - !input speed_step|int, 0]|max }}
                 - delay:
                     milliseconds: 500
               until:
