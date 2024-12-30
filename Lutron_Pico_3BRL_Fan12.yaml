@@ -1,6 +1,6 @@
 blueprint:
   name: Lutron Pico 5 Button - Fan Control
-  description: Control fan entities with a Lutron Pico 5 Button remote, using fan.increase_speed/fan.decrease_speed calls, plus direction toggle.
+  description: Control a fan with a Lutron Pico 5 Button remote (increase/decrease speed and toggle direction).
   domain: automation
 
   input:
@@ -103,16 +103,13 @@ action:
           - condition: trigger
             id: stop_pressed
         sequence:
+          # Define a variable to capture current direction
+          - variables:
+              current_direction: "{{ state_attr(!input fan_entity, 'direction') }}"
           - service: fan.set_direction
             data:
               entity_id: !input fan_entity
-              direction: >
-                {% set current_dir = state_attr( ( !input fan_entity ), 'direction' ) %}
-                {% if current_dir == 'reverse' %}
-                  forward
-                {% else %}
-                  reverse
-                {% endif %}
+              direction: "{{ 'forward' if current_direction == 'reverse' else 'reverse' }}"
 
       # ============== DOWN Pressed (Lower) ==============
       - conditions:
