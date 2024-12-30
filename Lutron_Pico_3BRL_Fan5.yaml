@@ -91,20 +91,34 @@ action:
               sequence:
                 - service: fan.set_percentage
                   data:
-                    percentage: >
-                      "{{ [state_attr(!input fan_entity, 'percentage') + !input speed_step, 100] | min }}"
-                  target:
                     entity_id: !input fan_entity
+                    percentage: "{{ [state_attr(fan_entity, 'percentage') + speed_step, 100] | min }}"
                 - delay:
                     milliseconds: 500
               until:
-                - condition: template
-                  value_template: >
-                    {{ state_attr(!input fan_entity, 'percentage') == 100 }}
+                - condition: trigger
+                  id: up_released
       - conditions:
           - condition: trigger
             id: down_pressed
         sequence:
           - repeat:
               sequence:
-                - service:
+                - service: fan.set_percentage
+                  data:
+                    entity_id: !input fan_entity
+                    percentage: "{{ [state_attr(fan_entity, 'percentage') - speed_step, 0] | max }}"
+                - delay:
+                    milliseconds: 500
+              until:
+                - condition: trigger
+                  id: down_released
+      - conditions:
+          - condition: trigger
+            id: off_pressed
+        sequence:
+          - service: fan.turn_off
+            target:
+              entity_id: !input fan_entity
+
+mode: restart
