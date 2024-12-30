@@ -1,0 +1,131 @@
+blueprint:
+  name: Lutron Pico 5 Button - Fan Control
+  description: Control fan entities with a Lutron Pico 5 Button remote, including speed adjustments and power toggling.
+  domain: automation
+  input:
+    pico_1:
+      name: Pico Device
+      description: Pico remote to associate with fan entity.
+      selector:
+        device:
+          model:
+            - PJ2-3BRL-*-* (Pico3ButtonRaiseLower)
+          multiple: false
+    fan_entity:
+      name: Fan Entity
+      description: Fan entity to control.
+      selector:
+        entity:
+          domain:
+          - fan
+          multiple: false
+    speed_step:
+      name: Fan Speed Step Percentage
+      description: Percentage of fan speed change on RAISE/LOWER button press.
+      selector:
+        number:
+          min: 1.0
+          max: 50.0
+          unit_of_measurement: percentage
+          mode: slider
+          step: 1.0
+      default: 10
+
+trigger:
+  - platform: device
+    device_id: !input pico_1
+    domain: lutron_caseta
+    type: press
+    subtype: 'on'
+    id: on_pressed
+  - platform: device
+    device_id: !input pico_1
+    domain: lutron_caseta
+    type: press
+    subtype: raise
+    id: up_pressed
+  - platform: device
+    device_id: !input pico_1
+    domain: lutron_caseta
+    type: release
+    subtype: raise
+    id: up_released
+  - platform: device
+    device_id: !input pico_1
+    domain: lutron_caseta
+    type: press
+    subtype: stop
+    id: stop_pressed
+  - platform: device
+    device_id: !input pico_1
+    domain: lutron_caseta
+    type: press
+    subtype: lower
+    id: down_pressed
+  - platform: device
+    device_id: !input pico_1
+    domain: lutron_caseta
+    type: release
+    subtype: lower
+    id: down_released
+  - platform: device
+    device_id: !input pico_1
+    domain: lutron_caseta
+    type: press
+    subtype: 'off'
+    id: off_pressed
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: on_pressed
+        sequence:
+          - service: fan.turn_on
+            target:
+              entity_id: !input fan_entity
+      - conditions:
+          - condition: trigger
+            id: up_pressed
+        sequence:
+          - repeat:
+              sequence:
+                - service: fan.set_percentage
+                  data:
+                    percentage: >
+                      {{ [state_attr(!input fan_entity, 'percentage') + !input speed_step, 100] | min }}
+                  target:
+                    entity_id: !input fan_entity
+                - delay:
+                    milliseconds: 500
+              until:
+                - condition: template
+                  value_template: >
+                    {{ state_attr(!input fan_entity, 'percentage') == 100 }}
+      - conditions:
+          - condition: trigger
+            id: down_pressed
+        sequence:
+          - repeat:
+              sequence:
+                - service: fan.set_percentage
+                  data:
+                    percentage: >
+                      {{ [state_attr(!input fan_entity, 'percentage') - !input speed_step, 0] | max }}
+                  target:
+                    entity_id: !input fan_entity
+                - delay:
+                    milliseconds: 500
+              until:
+                - condition: template
+                  value_template: >
+                    {{ state_attr(!input fan_entity, 'percentage') == 0 }}
+      - conditions:
+          - condition: trigger
+            id: off_pressed
+        sequence:
+          - service: fan.turn_off
+            target:
+              entity_id: !input fan_entity
+
+mode: restart
