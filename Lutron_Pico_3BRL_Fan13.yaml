@@ -72,6 +72,10 @@ trigger:
     id: off_pressed
 
 action:
+  # Store fan entity in a variable so we don't call "!input fan_entity" inside templates
+  - variables:
+      fan_var: !input fan_entity
+
   - choose:
       # ============== ON Pressed ==============
       - conditions:
@@ -103,12 +107,11 @@ action:
           - condition: trigger
             id: stop_pressed
         sequence:
-          # Define a variable to capture current direction
           - variables:
-              current_direction: "{{ state_attr(!input fan_entity, 'direction') }}"
+              current_direction: "{{ state_attr(fan_var, 'direction') }}"
           - service: fan.set_direction
             data:
-              entity_id: !input fan_entity
+              entity_id: "{{ fan_var }}"
               direction: "{{ 'forward' if current_direction == 'reverse' else 'reverse' }}"
 
       # ============== DOWN Pressed (Lower) ==============
