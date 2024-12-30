@@ -9,7 +9,8 @@ blueprint:
       selector:
         device:
           model:
-            - PJ2-3BRL-*-* (Pico3ButtonRaiseLower)
+            - PJ2-3BRL-GXX-X01 (Pico3ButtonRaiseLower)
+            - PJ2-3BRL-XXX-F01 (Pico3ButtonRaiseLower)
           multiple: false
     fan_entity:
       name: Fan Entity
